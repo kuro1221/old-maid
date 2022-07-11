@@ -1,0 +1,141 @@
+'ゲームの流れ
+'- 名前を入力
+- ゲームを選択 Game
+- 人数を決定 Game
+- ゲームスタート Game GameType, OM
+- ユーザーの順番を決める GameType OM
+- デッキをセットする Deck OM.Deck.setDeck()
+- デッキをシャッフルする OM.Deck.shuffle()
+- カードを配る OM.Deck.distributeCard()
+- 揃ったカードを捨てる OM.OMRule.removePairsAfterDistributed(users)
+
+- カードを引く User.drawCard()
+- (0枚になったかどうか判定する)
+- (ゲーム終了したか判定する)
+- 揃ったカードがあるか確認する
+- カードを捨てる
+- (0枚になったか判定する)
+- (ゲーム終了したか判定する)
+- 引いたカードの場所を決める
+
+- プレイヤーがひくとか引かないとかの間の管理は？
+
+0枚になったら
+- finishUserListに入れる
+
+- もう一回行うか決める (Interface GameUser)
+- ゲームを途中で中断する OMUser (Interface GameUser)
+
+
+- カードを捨てる場所
+
+@startuml
+hide empty members
+
+' gameをスタートすることが責務（具体的な進行は各ゲームに任せる）
+class Game {
+    GameType: game
+    countPeople: int
+    selectGame()
+    startGame()
+}
+
+interface GameType {
+    deck: Deck
+    startGame()
+    decideOrder()
+}
+
+' OldMaid(ババ抜き)
+' ゲームの進行をすることが責務
+' ・ゲームを開始する
+' ・ユーザーの順番を決める
+' ・ユーザーのターンを切り替える
+' ・手札がなくなったユーザーを判定する
+' ・ゲーム終了を判定する
+class OM {
+    users: User[]
+    finishUsers: User[]
+    currentUser: User
+    OMRule: OMRule
+    deck: Deck
+    startGame()
+    decideOrder() 
+    nextTurn(): User
+}
+
+Class OMRule {
+    checkHandPairs()
+    removePairs()
+    removePairsAfterDistributed()
+    judgeFinishUser(): Boolean
+    judgeFinishGame(): Boolean
+}
+
+class Deck {
+    cardList: Card[]
+    setDeck(): cardList
+    disributeCard(): Card
+    popCard(): Card
+}
+
+class Card {
+    value: Int
+    suit: String
+    frontBack: String
+    turnOver(): Card
+}
+
+
+' ・ゲームをプレイすることが責務
+' ・勝敗判定など細かいババ抜きのルールは知らなくていい
+class Hand {
+    handList: Card[]
+    setHandList(): handList[]
+    addHand(): Hand
+    removeHand(): Hand
+}
+
+' ユーザー
+class OMUser {
+    hand: Hand
+    name: Name
+    drawCard()
+    setCard()
+}
+
+class OMPlayer {
+    stopGame()
+}
+
+class OMCPU {
+    strategy: Strategy
+    decideDrawCard(): int
+    decideCardPlacement(): int
+}
+
+Interface Strategy {
+    decideDrawCard(): int 
+    decideCardPlacement(): int
+}
+
+class RandomStrategy {
+    decideDrawCard(): int 
+}
+
+class OnlyLeftEndCardStrategy {
+    decideDrawCard(): int 
+}
+
+class Name {
+    name: Name
+    changeName(): Name
+}
+
+GameType <|.. OM
+Strategy <|.. RandomStrategy
+Strategy <|.. OnlyLeftEndCardStrategy
+OMUser <|-- OMPlayer
+OMUser <|-- OMCPU
+
+@enduml
